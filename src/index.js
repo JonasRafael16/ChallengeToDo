@@ -10,8 +10,8 @@ app.use(express.json());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  if(!request.headers.username){
 
+  if(!request.headers.username){
     return response.status(401).json('username not informed!');
   }
   next();
@@ -35,6 +35,27 @@ app.post('/users', (request, response) => {
   return response.status(201).json({Success: 'user created successfully!'})
 });
 
+app.post('/todos', checksExistsUserAccount, (request, response) => {
+  const {username} = request.headers;
+  const {title, deadline} = request.body;
+  const user = users.find(users => users.username === username);
+
+  if (!user) {
+    return response.status(401).json({Error: 'username not found!'});
+  }
+
+  user.todos.push({
+    id: uuidv4(),
+    title: title,
+    done: false,
+    deadline: deadline,
+    created_at: new Date
+  })
+
+
+  return response.status(201).send();
+});
+
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   const {username} = request.headers;
   console.log(username)
@@ -42,10 +63,6 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 
   return response.json(user.todos)
 
-});
-
-app.post('/todos', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
