@@ -10,10 +10,17 @@ app.use(express.json());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
+  const { username } = request.headers;
 
-  if(!request.headers.username){
+  if(!username){
     return response.status(401).json('username not informed!');
   }
+
+  const user = users.find(users => users.username === username);
+  if(!user) {
+    return response.status(401).json({Error: 'username not found!'});
+  }
+
   next();
 }
 
@@ -69,10 +76,8 @@ const { username } = request.headers;
 const { title, deadline } = request.body;
 const { id: idTodo } = request.query;
 
-const user = users.find(users=> users.username === username);
-if (!user) {
-  return response.status(401).json({Error: 'username not found!'});
-}
+const user = users.find(users => users.username === username);
+
 const todo = user.todos.find(todos => todos.id ===  idTodo);
 if (!todo) {
   return response.status(401).json({Error: 'todo not found!'});
@@ -90,9 +95,6 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   const { id: idTodo } = request.query;
 
   const user = users.find(users => users.username === username);
-  if(!user) {
-    return response.status(401).json({Error: 'username not found!'});
-  }
 
   const todo = user.todos.find(todos => todos.id ===  idTodo);
   if (!todo) {
@@ -104,7 +106,21 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id: idTodo } = request.query;
+
+  const user = users.find(users => users.username === username);
+
+  const todoIndex = user.todos.findIndex(todos => todos.id ===  idTodo);
+  if (todoIndex === -1) {
+    return response.status(401).json({Error: 'todo not found!'});
+  }
+
+  user.todos.splice(todoIndex, 1);
+
+  return response.status(200).send();
+
+
 });
 
 module.exports = app;
