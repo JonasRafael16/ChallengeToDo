@@ -48,17 +48,16 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
     id: uuidv4(),
     title: title,
     done: false,
-    deadline: deadline,
-    created_at: new Date
+    deadline: new Date(deadline),
+    created_at: new Date()
   })
 
 
-  return response.status(201).send();
+  return response.status(201).json(user.todos);
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
-  const {username} = request.headers;
-  console.log(username)
+  const { username } = request.headers;
   const user = users.find(users => users.username === username);
 
   return response.json(user.todos)
@@ -66,11 +65,42 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+const { username } = request.headers;
+const { title, deadline } = request.body;
+const { id: idTodo } = request.query;
+
+const user = users.find(users=> users.username === username);
+if (!user) {
+  return response.status(401).json({Error: 'username not found!'});
+}
+const todo = user.todos.find(todos => todos.id ===  idTodo);
+if (!todo) {
+  return response.status(401).json({Error: 'todo not found!'});
+}
+
+todo.title = title;
+todo.deadline = deadline;
+
+return response.status(201).send()
+
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id: idTodo } = request.query;
+
+  const user = users.find(users => users.username === username);
+  if(!user) {
+    return response.status(401).json({Error: 'username not found!'});
+  }
+
+  const todo = user.todos.find(todos => todos.id ===  idTodo);
+  if (!todo) {
+    return response.status(401).json({Error: 'todo not found!'});
+  }
+  todo.done = true;
+
+  return response.status(201).send();
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
